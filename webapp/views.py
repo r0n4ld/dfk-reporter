@@ -121,7 +121,7 @@ def index(request):
         except ValueError:
             wallet = ''
             error = 'Wallet is not valid.'
-    else:
+    elif wallet:
         wallet_one = ''
         try:
             wallet = Web3.toChecksumAddress(wallet)
@@ -129,7 +129,7 @@ def index(request):
             error = 'Wallet is not valid.'
             wallet = ''
     if not wallet:
-        return {}
+        return {'error': error}
 
     # Page
     page = request.POST.get('page', '')
@@ -158,7 +158,6 @@ def index(request):
         dfk_npc = ''
         dfk_action = 'unknown'
         dfk_info = ""
-        dfk_taxable_event = False
         dfk_transaction['timestamp'] = datetime.datetime.fromtimestamp(int(transaction['timestamp'], 16))
 
         tx_to = convert_one_to_hex(transaction['to'])
@@ -263,7 +262,6 @@ def index(request):
 
         # uniswapv2router
         elif tx_to == uniswapv2router.CONTRACT_ADDRESS:
-            dfk_taxable_event = True
 
             dfk_location = 'Marketplace'
             func_obj, func_params = uniswapv2router.CONTRACT.decode_function_input(transaction["input"])
@@ -272,7 +270,6 @@ def index(request):
 
             if dfk_action in ['swapTokensForExactTokens', 'swapETHForExactTokens', 'swapExactETHForTokens', 'swapExactTokensForETH', 'swapExactTokensForTokens']:
                 dfk_npc = 'Trader'
-                dfk_taxable_event = True
                 dfk_info = "Swap tokens"
 
             elif dfk_action in ['addLiquidityETH', 'addLiquidity']:
@@ -462,7 +459,6 @@ def index(request):
         dfk_transaction['location'] = dfk_location
         dfk_transaction['npc'] = dfk_npc
         dfk_transaction['action'] = dfk_action
-        dfk_transaction['taxable_event'] = dfk_taxable_event
         dfk_transaction['info'] = dfk_info
         dfk_transaction['tokens_in'] = tokens_in
         dfk_transaction['tokens_out'] = tokens_out
@@ -498,28 +494,42 @@ def update(request):
     # LP Pair data from DFK itself for Liquidity pair prices.
     query = """
 {
-  pairDayDatas(first: 1000) {
-    token0 {
-      name
-    }
-    token1 {
-      name
-    }
-    date
-    pairAddress
-    totalSupply
-    reserveUSD
+  pairs(first:1000) {
+    id
   }
 }
     """
     result = requests.post(dexUrl, json={'query': query, 'variables': {}}, headers=headers)
     result_json = result.json()
-    for item in result_json['data']['pairDayDatas']:
-        if float(item['totalSupply']) <= 0: continue
-        d = item['date']
-        priceUSD = float(item['reserveUSD']) / float(item['totalSupply'])
-        name = item['token0']['name'] + " - " + item['token1']['name'] + " LP"
-        TokenPrice.objects.get_or_create(token=name, address=Web3.toChecksumAddress(item['pairAddress']), datetime=datetime.datetime.utcfromtimestamp(d), defaults={'price': priceUSD})
+    for item in result_json['data']['pairs']:
+        import decimal
+        query = """
+        {
+          pairDayDatas(first: 1000, where: {pairAddress: "%s"}) {
+            token0 {
+              name
+            }
+            token1 {
+              name
+            }
+            date
+            pairAddress
+            totalSupply
+            reserveUSD
+          }
+        } 
+            """ % (item['id'])
+        result = requests.post(dexUrl, json={'query': query, 'variables': {}}, headers=headers)
+        result_json = result.json()
+        for item in result_json['data']['pairDayDatas']:
+            if float(item['totalSupply']) <= 0: continue
+            d = item['date']
+            priceUSD = float(item['reserveUSD']) / float(item['totalSupply'])
+            name = item['token0']['name'] + " - " + item['token1']['name'] + " LP"
+            try:
+                TokenPrice.objects.get_or_create(token=name, address=Web3.toChecksumAddress(item['pairAddress']), datetime=datetime.datetime.utcfromtimestamp(d), defaults={'price': priceUSD})
+            except decimal.InvalidOperation:
+                pass
 
     # For whatever data we did not get yet, update with data from CoinGecko.
     cg = CoinGeckoAPI()
