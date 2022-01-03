@@ -161,7 +161,7 @@ def index(request):
         dfk_npc = ''
         dfk_action = 'unknown'
         dfk_info = ""
-        dfk_transaction['timestamp'] = datetime.datetime.fromtimestamp(int(transaction['timestamp'], 16))
+        dfk_transaction['timestamp'] = datetime.datetime.utcfromtimestamp(int(transaction['timestamp'], 16))
 
         tx_to = convert_one_to_hex(transaction['to'])
         tx_from = convert_one_to_hex(transaction['from'])
@@ -187,7 +187,6 @@ def index(request):
         internal_receipt = wone.CONTRACT.events.Deposit().processReceipt(transaction_receipt, errors=DISCARD)
         for item in internal_receipt:
             amount = item['args']['wad']
-            dfk_info += f" sold {amount} tokens of ONE"
 
             usdDayPrice = TokenPrice.objects.filter(token='ONE', datetime__date=dfk_transaction['timestamp'].date()).first().price
             tokens_out.append({'amount': amount, 'currency': '0x', 'currency_name': 'ONE', 'currency_decimals': 18, 'usdDayPrice': usdDayPrice})
@@ -195,7 +194,6 @@ def index(request):
         internal_receipt = wone.CONTRACT.events.Withdrawal().processReceipt(transaction_receipt, errors=DISCARD)
         for item in internal_receipt:
             amount = item['args']['wad']
-            dfk_info += f" bought {amount} tokens of ONE"
 
             usdDayPrice = TokenPrice.objects.filter(token='ONE', datetime__date=dfk_transaction['timestamp'].date()).first().price
             tokens_in.append({'amount': amount, 'currency': '0x', 'currency_name': 'ONE', 'currency_decimals': 18, 'usdDayPrice': usdDayPrice})
@@ -277,7 +275,11 @@ def index(request):
 
             elif dfk_action in ['addLiquidityETH', 'addLiquidity']:
                 dfk_npc = 'Druid'
-                dfk_info = "Buy liquidity token"
+                dfk_info = "Buy liquidity tokens"
+
+            elif dfk_action in ['removeLiquidity', 'removeLiquidityETH']:
+                dfk_npc = 'Druid'
+                dfk_info = "Sell liquidity tokens"
 
         # Summoning
         elif tx_to == summoning.CONTRACT_ADDRESS:
