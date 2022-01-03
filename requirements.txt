@@ -1,3 +1,5 @@
 Django==3.2.8
 web3
 pyhmy
+python-dotenv
+django_extensions
