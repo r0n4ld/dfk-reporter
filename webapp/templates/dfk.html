@@ -17,7 +17,7 @@
                 </div>
                 <div class="mb-3">
                     <label class="form-check-label" for="only_transfers">Show only transactions with token/ONE/hero transfers</label>
-                    <input class="form-check-input" id="only_transfers" type="checkbox" name="only_transfers"{% if only_transfers %}checked="checked"{% endif %}/>
+                    <input class="form-check-input" id="only_transfers" type="checkbox" name="only_transfers" checked="{% if only_transfers %}checked{% endif %}"/>
                 </div>
 
                 <input id="submit" type="submit" name="submit" value="Show me the transactions" class="btn btn-primary" onclick="$('#submit').hide(); $('#loading').show();"/>

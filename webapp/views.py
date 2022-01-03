@@ -139,7 +139,10 @@ def index(request):
         page = 0
 
     # Only tranfers
-    only_transfers = request.POST.get('only_transfers') == 'on'
+    if request.POST.get('only_transfers'):
+        only_transfers = request.POST.get('only_transfers') == 'on'
+    else:
+        only_transfers = True
 
     w3 = Web3(Web3.HTTPProvider(settings.RPC_ADDRESS))
 
@@ -197,9 +200,6 @@ def index(request):
             usdDayPrice = TokenPrice.objects.filter(token='ONE', datetime__date=dfk_transaction['timestamp'].date()).first().price
             tokens_in.append({'amount': amount, 'currency': '0x', 'currency_name': 'ONE', 'currency_decimals': 18, 'usdDayPrice': usdDayPrice})
 
-        if only_transfers and not tokens_in and not tokens_out:
-            continue
-
         if tx_to == wallet and transaction['input'] == '0x':
             dfk_location = 'Non DFK'
             dfk_action = 'receiveTokens'
@@ -208,6 +208,9 @@ def index(request):
             usdDayPrice = TokenPrice.objects.filter(token='ONE', datetime__date=dfk_transaction['timestamp'].date()).first().price
 
             tokens_in.append({'amount': int(transaction['value'], 16), 'currency': '0x', 'currency_name': 'ONE', 'currency_decimals': 18, 'usdDayPrice': usdDayPrice})
+
+        if only_transfers and not tokens_in and not tokens_out and tx_to not in [auction.CONTRACT_ADDRESS, summoning.CONTRACT_ADDRESS, quest.CONTRACT_ADDRESS]:
+            continue
 
         # Airdrop
         elif tx_to == AIRDROP:
@@ -334,8 +337,11 @@ def index(request):
                 dfk_npc = 'Arch druid'
                 dfk_info = str(func_obj)
 
+            if only_transfers and not tokens_in:
+                continue
+
         # Tavern
-        elif tx_to == auction.CONTRACT_ADDRESS or tx_from == auction.CONTRACT_ADDRESS:
+        elif tx_to == auction.CONTRACT_ADDRESS:
             # Examples of buying/selling on 0x36f217187cb802f85fa20d6882a3b6ab579df437
             dfk_location = 'Tavern'
             dfk_npc = 'Agent'
@@ -386,6 +392,9 @@ def index(request):
                 else:
                     dfk_info = dfk_action
 
+            if only_transfers and not tokens_in:
+                continue
+
         # Quest
         elif tx_to == quest.CONTRACT_ADDRESS:
             dfk_location = 'Professions'
@@ -435,6 +444,9 @@ def index(request):
 
                 elif dfk_action == 'cancelQuest':
                     dfk_info = "Cancel quest"
+
+            if only_transfers and not tokens_in:
+                continue
 
         # Wishing well
         elif tx_to == wishingwell.CONTRACT_ADDRESS:
