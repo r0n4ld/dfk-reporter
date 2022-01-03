@@ -17,6 +17,10 @@ from django.core.management.utils import get_random_secret_key
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+# envs
+from dotenv import load_dotenv
+project_folder = os.path.expanduser('~/webapp')  # adjust as appropriate
+load_dotenv(os.path.join(project_folder, '.env'))
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/3.1/howto/deployment/checklist/
