@@ -30,7 +30,7 @@ load_dotenv(os.path.join(project_folder, '.env'))
 SECRET_KEY = os.getenv("SECRET_KEY", get_random_secret_key())
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.getenv("DEBUG", "False") == "True"
+DEBUG = os.getenv("DEBUG", "True") == "True"
 
 ALLOWED_HOSTS = os.getenv("DJANGO_ALLOWED_HOSTS", "127.0.0.1,localhost").split(",")
 
@@ -130,32 +130,33 @@ STATIC_URL = '/static/'
 
 RPC_ADDRESS = 'https://rpc.s0.t.hmny.io'
 
-LOGGING = {
-    "version": 1,
-    "disable_existing_loggers": False,
-    "root": {"level": "INFO", "handlers": ["file"]},
-    "handlers": {
-        "file": {
-            "level": "INFO",
-            "class": "logging.FileHandler",
-            "filename": "/var/log/django.log",
-            "formatter": "app",
+if not DEBUG:
+    LOGGING = {
+        "version": 1,
+        "disable_existing_loggers": False,
+        "root": {"level": "INFO", "handlers": ["file"]},
+        "handlers": {
+            "file": {
+                "level": "INFO",
+                "class": "logging.FileHandler",
+                "filename": "/var/log/django.log",
+                "formatter": "app",
+            },
         },
-    },
-    "loggers": {
-        "django": {
-            "handlers": ["file"],
-            "level": "INFO",
-            "propagate": True
+        "loggers": {
+            "django": {
+                "handlers": ["file"],
+                "level": "INFO",
+                "propagate": True
+            },
         },
-    },
-    "formatters": {
-        "app": {
-            "format": (
-                u"%(asctime)s [%(levelname)-8s] "
-                "(%(module)s.%(funcName)s) %(message)s"
-            ),
-            "datefmt": "%Y-%m-%d %H:%M:%S",
+        "formatters": {
+            "app": {
+                "format": (
+                    u"%(asctime)s [%(levelname)-8s] "
+                    "(%(module)s.%(funcName)s) %(message)s"
+                ),
+                "datefmt": "%Y-%m-%d %H:%M:%S",
+            },
         },
-    },
-}
+    }

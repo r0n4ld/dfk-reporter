@@ -3,11 +3,11 @@
 {% block content %}
 
 
-<main style="background-color: #f8f9fa !important">
-    <div class="container">
-        <div class="row">
-            <h1>Defi Kingdoms Transaction Reporter</h1>
-            <form method="POST" style="background-color: #fff !important">
+<main style="background-image: url('https://defikingdoms.com/img/defi-kingdoms-bg.png'); height: 1332px;">
+    <div class="container" style="">
+        <div class="row" style="">
+            <form class="border rounded" method="POST" style="background-color: #fff !important; padding-bottom: 10px;margin-top:20px;">
+                <h1>Defi Kingdoms Transaction Reporter</h1>
                 <div class="mb-3">
                     <label class="form-label for="wallet">Wallet</label>
                     <input class="form-control" id="wallet" type="text" name="wallet" placeholder="Enter a wallet address" value="{{wallet}}"/>
@@ -20,18 +20,21 @@
                     <input class="form-check-input" id="only_transfers" type="checkbox" name="only_transfers"{% if only_transfers %}checked="checked"{% endif %}/>
                 </div>
 
-                <input type="submit" name="submit" value="Show me the transactions" class="btn btn-primary"/>
+                <input id="submit" type="submit" name="submit" value="Show me the transactions" class="btn btn-primary" onclick="$('#submit').hide(); $('#loading').show();"/>
+                <button class="btn btn-primary" type="button" disabled style="display: none" id="loading">
+                  <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                  Retrieving transactions from blockchain...
+                </button>
+                <br/>
+
                 {% csrf_token %}
             </form>
         </div>
 
-        <div class="row" style="margin-top: 20px;">
-            {% if wallet %}
-            <div style="background-color: #fff !important">
-                <h4>Showing wallet <a target="_blank" href="https://explorer.harmony.one/address/{{wallet}}">{{wallet}}</a>{% if wallet_one %} ({{wallet_one}}){% endif %}</h4>
-                {% if profile_name %}
-                    <h5>Player profile name: {{profile_name}}</h5>
-                {% endif %}
+        {% if wallet %}
+        <div class="row border rounded" style="margin-top: 30px;">
+            <br/><br/>
+            <div style="background-color: #fff !important; padding-top: 10px;">
                 <table id="myTable" class="table table-hover" style="background-color: #fff !important">
                     <thead class="thead-light">
                         <tr>
@@ -58,13 +61,13 @@
                                 <ul style="list-style-type:none;padding-left: 0;">
                                     {% for item in transaction.tokens_out|token_transfers %}
                                         <li style="">
-                                            <span class="badge bg-warning text-dark" style="width: 40px; margin-right: 3px;">OUT</span>{{item.formatted_amount}} <a target="_blank" href="https://explorer.harmony.one/address/{{item.currency}}">{{item.currency_name}}</a>
+                                            <span class="badge bg-warning text-dark" style="width: 40px; margin-right: 3px;">OUT&nbsp;</span>{{item.formatted_amount}} <a target="_blank" href="https://explorer.harmony.one/address/{{item.currency}}">{{item.currency_name}}</a>
                                         </li>
                                     {% endfor %}
 
                                     {% for item in transaction.tokens_in|token_transfers %}
                                         <li style="">
-                                           <span class="badge bg-info text-dark" style="width: 40px; margin-right: 3px;">IN</span>{{item.formatted_amount}} <a target="_blank" href="https://explorer.harmony.one/address/{{item.currency}}">{{item.currency_name}}</a>
+                                           <span class="badge bg-info text-dark" style="width: 40px; margin-right: 3px;">IN&nbsp;</span>{{item.formatted_amount}} <a target="_blank" href="https://explorer.harmony.one/address/{{item.currency}}">{{item.currency_name}}</a>
                                         </li>
                                     {% endfor %}
                                 </ul>
@@ -107,20 +110,27 @@
                         </form>
                     {% endif %}
                 </div>
-            {% endif %}
             </div>
-        <p>
-            Please contact Ronald#9377 in the DFK Discord for feedback and/or suggestions (EU TZ)
-        </p>
+    {% endif %}
+        <div class="row rounded" style="background-color: #fff !important;margin-top: 20px;margin-bottom:20px;">
+            <p style="margin-top:10px;margin-bottom:10px;">
+                Please contact Ronald#9377 in the DFK Discord for feedback and/or suggestions (EU TZ)
+            </p>
+        </div>
     </div>
+
 </main>
 <script>
-<!--$(document).ready( function () {-->
-    <!--$('#myTable').DataTable({-->
-        <!--paging: false,-->
-        <!--ordering: false-->
-    <!--});-->
-<!--} );-->
+$(document).ready( function () {
+    $('#myTable').DataTable({
+        dom: 'Bfrtip',
+        paging: false,
+        ordering: false,
+        buttons: [
+            'copy', 'csv', 'excel', 'print'
+        ]
+    });
+} );
 </script>
 
 
