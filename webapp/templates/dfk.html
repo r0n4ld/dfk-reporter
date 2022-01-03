@@ -1,0 +1,127 @@
+{% extends 'wireframe.html' %}
+{% load common %}
+{% block content %}
+
+
+<main style="background-color: #f8f9fa !important">
+    <div class="container">
+        <div class="row">
+            <h1>Defi Kingdoms Transaction Reporter</h1>
+            <form method="POST" style="background-color: #fff !important">
+                <div class="mb-3">
+                    <label class="form-label for="wallet">Wallet</label>
+                    <input class="form-control" id="wallet" type="text" name="wallet" placeholder="Enter a wallet address" value="{{wallet}}"/>
+                    {% if error %}
+                    <p style="color: red"><b>{{error}}</b></p>
+                    {% endif %}
+                </div>
+                <div class="mb-3">
+                    <label class="form-check-label" for="only_transfers">Show only transactions with token/ONE/hero transfers</label>
+                    <input class="form-check-input" id="only_transfers" type="checkbox" name="only_transfers"{% if only_transfers %}checked="checked"{% endif %}/>
+                </div>
+
+                <input type="submit" name="submit" value="Show me the transactions" class="btn btn-primary"/>
+                {% csrf_token %}
+            </form>
+        </div>
+
+        <div class="row" style="margin-top: 20px;">
+            {% if wallet %}
+            <div style="background-color: #fff !important">
+                <h4>Showing wallet <a target="_blank" href="https://explorer.harmony.one/address/{{wallet}}">{{wallet}}</a>{% if wallet_one %} ({{wallet_one}}){% endif %}</h4>
+                {% if profile_name %}
+                    <h5>Player profile name: {{profile_name}}</h5>
+                {% endif %}
+                <table id="myTable" class="table table-hover" style="background-color: #fff !important">
+                    <thead class="thead-light">
+                        <tr>
+                            <th>Tx</th>
+                            <th>Date</th>
+                            <th>Location</th>
+                            <th>NPC</th>
+                            <th>Event</th>
+                            <th colspan="1" style="width: 250px">Tokens out/in</th>
+                            <th colspan="1" style="width: 100px">USD</th>
+
+                        </tr>
+                    </thead>
+                    {% for transaction in dfk_transactions %}
+                        <tr style="{% if False and transaction.taxable_event %}background-color: lightgreen;{% endif %}">
+                            <td><a href="https://explorer.harmony.one/tx/{{transaction.tx.hash}}">{{transaction.tx.hash|slice:":4"}}...{{transaction.tx.hash|slice:"-4:"}}</a></td>
+                            <td>{{transaction.timestamp|date:"Y-m-d H:i"}}</td>
+                            <td>{{transaction.location}}</td>
+                            <td>{{transaction.npc}}</td>
+                            <!-- <td>{{transaction.action}}</td> -->
+                            <td>{{transaction.info}}</td>
+                            <td>
+                                {% if transaction.tokens_out or transaction.tokens_in %}
+                                <ul style="list-style-type:none;padding-left: 0;">
+                                    {% for item in transaction.tokens_out|token_transfers %}
+                                        <li style="">
+                                            <span class="badge bg-warning text-dark" style="width: 40px; margin-right: 3px;">OUT</span>{{item.formatted_amount}} <a target="_blank" href="https://explorer.harmony.one/address/{{item.currency}}">{{item.currency_name}}</a>
+                                        </li>
+                                    {% endfor %}
+
+                                    {% for item in transaction.tokens_in|token_transfers %}
+                                        <li style="">
+                                           <span class="badge bg-info text-dark" style="width: 40px; margin-right: 3px;">IN</span>{{item.formatted_amount}} <a target="_blank" href="https://explorer.harmony.one/address/{{item.currency}}">{{item.currency_name}}</a>
+                                        </li>
+                                    {% endfor %}
+                                </ul>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if transaction.tokens_out or transaction.tokens_in %}
+                                <ul style="list-style-type:none;padding-left: 0;">
+                                    {% for item in transaction.tokens_out|token_transfers %}
+                                        <li style="">
+                                            {% if item.amount_usd == None %}
+                                                &nbsp;
+                                            {% else %}
+                                                $ {{item.amount_usd|floatformat:2}}
+                                            {% endif %}
+                                        </li>
+                                    {% endfor %}
+                                    {% for item in transaction.tokens_in|token_transfers %}
+                                        <li style="">
+                                            {% if item.amount_usd == None %}
+                                                &nbsp;
+                                            {% else %}
+                                                $ {{item.amount_usd|floatformat:2}}
+                                            {% endif %}
+                                        </li>
+                                    {% endfor %}
+                                </ul>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                    </table>
+                    {% if has_next_page %}
+                        <form method="POST" style="background-color: #fff !important">
+                            <input type="hidden" name="wallet" value="{{wallet}}"/>
+                            <input type="hidden" name="page" value="{{next_page}}"/>
+                            <input type="hidden" name="only_transfers"{% if only_transfers %}value="on"{% endif %}/>
+                            <input type="submit" name="submit" value="Next page" class="btn btn-primary"/>
+                            {% csrf_token %}
+                        </form>
+                    {% endif %}
+                </div>
+            {% endif %}
+            </div>
+        <p>
+            Please contact Ronald#9377 in the DFK Discord for feedback and/or suggestions (EU TZ)
+        </p>
+    </div>
+</main>
+<script>
+<!--$(document).ready( function () {-->
+    <!--$('#myTable').DataTable({-->
+        <!--paging: false,-->
+        <!--ordering: false-->
+    <!--});-->
+<!--} );-->
+</script>
+
+
+{% endblock %}
