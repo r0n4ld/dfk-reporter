@@ -491,45 +491,54 @@ def update(request):
             priceUSD = price['priceUSD']
             TokenPrice.objects.get_or_create(token=token['symbol'], address=Web3.toChecksumAddress(token['id']), datetime=datetime.datetime.utcfromtimestamp(d), defaults={'price': priceUSD})
 
-    # LP Pair data from DFK itself for Liquidity pair prices.
-    query = """
-{
-  pairs(first:1000) {
-    id
-  }
-}
-    """
-    result = requests.post(dexUrl, json={'query': query, 'variables': {}}, headers=headers)
-    result_json = result.json()
-    for item in result_json['data']['pairs']:
-        import decimal
+    # LP Pair data from DFK against Jewel pair
+    for t in ['token0', 'token1']:
         query = """
-        {
-          pairDayDatas(first: 1000, where: {pairAddress: "%s"}) {
-            token0 {
-              name
+            {
+              pairs(first:1000, where: {%s: "0x72cb10c6bfa5624dd07ef608027e366bd690048f"}) {
+                id
+                token0 {
+                  name
+                  id
+                }
+                token1 {
+                  name
+                  id
+                }
+              }
             }
-            token1 {
-              name
-            }
-            date
-            pairAddress
-            totalSupply
-            reserveUSD
-          }
-        } 
-            """ % (item['id'])
+        """ % t
         result = requests.post(dexUrl, json={'query': query, 'variables': {}}, headers=headers)
         result_json = result.json()
-        for item in result_json['data']['pairDayDatas']:
-            if float(item['totalSupply']) <= 0: continue
-            d = item['date']
-            priceUSD = float(item['reserveUSD']) / float(item['totalSupply'])
-            name = item['token0']['name'] + " - " + item['token1']['name'] + " LP"
-            try:
-                TokenPrice.objects.get_or_create(token=name, address=Web3.toChecksumAddress(item['pairAddress']), datetime=datetime.datetime.utcfromtimestamp(d), defaults={'price': priceUSD})
-            except decimal.InvalidOperation:
-                pass
+        for item in result_json['data']['pairs']:
+            import decimal
+            query = """
+            {
+              pairDayDatas(first: 1000, where: {pairAddress: "%s"}) {
+                token0 {
+                  name
+                }
+                token1 {
+                  name
+                }
+                date
+                pairAddress
+                totalSupply
+                reserveUSD
+              }
+            } 
+                """ % (item['id'])
+            result = requests.post(dexUrl, json={'query': query, 'variables': {}}, headers=headers)
+            result_json = result.json()
+            for item in result_json['data']['pairDayDatas']:
+                if float(item['totalSupply']) <= 0: continue
+                d = item['date']
+                priceUSD = float(item['reserveUSD']) / float(item['totalSupply'])
+                name = item['token0']['name'] + " - " + item['token1']['name'] + " LP"
+                try:
+                    TokenPrice.objects.get_or_create(token=name, address=Web3.toChecksumAddress(item['pairAddress']), datetime=datetime.datetime.utcfromtimestamp(d), defaults={'price': priceUSD})
+                except decimal.InvalidOperation:
+                    pass
 
     # For whatever data we did not get yet, update with data from CoinGecko.
     cg = CoinGeckoAPI()
