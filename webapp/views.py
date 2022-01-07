@@ -439,6 +439,8 @@ def index(request):
                         dfk_npc = 'Wishing well'
                     elif quest_address == '0xe4154B6E5D240507F9699C730a496790A722DF19':
                         dfk_npc = 'Gardener'
+                    elif quest_address == '0x6FF019415Ee105aCF2Ac52483A33F5B43eaDB8d0':
+                        dfk_npc = 'Miner'
                     else:
                         dfk_npc = quest_address
                     dfk_info = f"Start quest for hero(es) {heroes}"
