@@ -488,10 +488,10 @@ def update(request):
     # Start with data from DFK itself.
     query = """
 {
-  tokens(first: 1000) {
+  tokens(first: 1000, where: {tradeVolume_gt: 0}) {
     id
     symbol
-    tokenDayData(first: 1000, orderDirection: asc) {
+    tokenDayData(first: 1000, orderDirection: asc, where:{priceUSD_lt:1000000000}) {
       date
       priceUSD
     }
