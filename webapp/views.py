@@ -394,7 +394,7 @@ def index(request):
                 else:
                     dfk_info = dfk_action
 
-            if only_transfers and not tokens_in:
+            if only_transfers and not tokens_in and dfk_action != 'bid':
                 continue
 
         # Quest
