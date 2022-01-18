@@ -203,7 +203,8 @@ def index(request):
             dfk_action = 'receiveTokens'
             dfk_info = "Received ONE from another wallet"
 
-            usdDayPrice = TokenPrice.objects.filter(token='ONE', datetime__date=dfk_transaction['timestamp'].date()).first().price
+            tokenPrice = TokenPrice.objects.filter(token='ONE', datetime__date=dfk_transaction['timestamp'].date()).first()
+            usdDayPrice = tokenPrice.price if tokenPrice else None
 
             tokens_in.append({'amount': int(transaction['value'], 16), 'currency': '0x', 'currency_name': 'ONE', 'currency_decimals': 18, 'usdDayPrice': usdDayPrice})
 
@@ -292,6 +293,7 @@ def index(request):
             elif str(func_obj) == '<Function createAuction(uint256,uint128,uint128,uint64,address)>':
                 dfk_location = 'Tavern'
                 dfk_npc = 'Agent'
+                heroId = func_params['_tokenId']
                 dfk_info = f'List hero {heroId} for hire'
 
                 receipt_result = summoning.CONTRACT.events.AuctionCreated().processReceipt(transaction_receipt, errors=DISCARD)
