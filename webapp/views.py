@@ -188,14 +188,16 @@ def index(request):
         for item in internal_receipt:
             amount = item['args']['wad']
 
-            usdDayPrice = TokenPrice.objects.filter(token='ONE', datetime__date=dfk_transaction['timestamp'].date()).first().price
+            tokenPrice = TokenPrice.objects.filter(token='ONE', datetime__date=dfk_transaction['timestamp'].date()).first()
+            usdDayPrice = tokenPrice.price if tokenPrice else None
             tokens_out.append({'amount': amount, 'currency': '0x', 'currency_name': 'ONE', 'currency_decimals': 18, 'usdDayPrice': usdDayPrice})
 
         internal_receipt = wone.CONTRACT.events.Withdrawal().processReceipt(transaction_receipt, errors=DISCARD)
         for item in internal_receipt:
             amount = item['args']['wad']
 
-            usdDayPrice = TokenPrice.objects.filter(token='ONE', datetime__date=dfk_transaction['timestamp'].date()).first().price
+            tokenPrice = TokenPrice.objects.filter(token='ONE', datetime__date=dfk_transaction['timestamp'].date()).first()
+            usdDayPrice = tokenPrice.price if tokenPrice else None
             tokens_in.append({'amount': amount, 'currency': '0x', 'currency_name': 'ONE', 'currency_decimals': 18, 'usdDayPrice': usdDayPrice})
 
         if tx_to == wallet and transaction['input'] == '0x':
